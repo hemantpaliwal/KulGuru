@@ -46,11 +46,6 @@ jobs:
         cd kulguru-app
         cordova platform add android@11
     
-    - name: Set Gradle permissions
-      run: |
-        cd kulguru-app/platforms/android
-        chmod +x gradlew
-    
     - name: Build APK (Debug)
       run: |
         cd kulguru-app
