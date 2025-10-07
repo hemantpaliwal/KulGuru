@@ -38,8 +38,8 @@ jobs:
     - name: Copy files to Cordova www
       run: |
         rm -rf kulguru-app/www/*
-        cp index.html kulguru-app/www/
-        cp config.xml kulguru-app/
+        cp Index.html kulguru-app/www/
+        cp Config.xml kulguru-app/
     
     - name: Add Android platform
       run: |
