@@ -46,35 +46,4 @@ jobs:
         cd kulguru-app
         cordova platform add android@11
 
-    # 🆕 Add this block right here
-    
-- name: Install Android SDK build tools
-  run: |
-    sudo apt-get update -qq
-    sudo apt-get install -y wget unzip
-    mkdir -p $ANDROID_HOME/cmdline-tools-temp
-    wget https://dl.google.com/android/repository/commandlinetools-linux-9477386_latest.zip -O cmdline-tools.zip
-    unzip -q cmdline-tools.zip -d $ANDROID_HOME/cmdline-tools-temp
-    yes | $ANDROID_HOME/cmdline-tools-temp/cmdline-tools/bin/sdkmanager --licenses
-    yes | $ANDROID_HOME/cmdline-tools-temp/cmdline-tools/bin/sdkmanager "platforms;android-32" "build-tools;32.0.0" "platform-tools"
-    - name: Build APK (Debug)
-      run: |
-        cd kulguru-app
-        cordova build android --debug
-    
-    - name: Upload APK Artifact
-      uses: actions/upload-artifact@v4
-      with:
-        name: kulguru-apk
-        path: kulguru-app/platforms/android/app/build/outputs/apk/debug/app-debug.apk
-        if-no-files-found: error
-    
-    - name: Create Release
-      id: create_release
-      uses: softprops/action-gh-release@v1
-      with:
-        tag_name: v1.0.${{ github.run_number }}
-        name: Kulguru v1.0.${{ github.run_number }}
-        files: kulguru-app/platforms/android/app/build/outputs/apk/debug/app-debug.apk
-      env:
-        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+    # 🆕 Safe SDK
