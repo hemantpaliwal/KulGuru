@@ -25,45 +25,47 @@ jobs:
         java-version: '17'
     
     - name: Install Cordova
-      run: |
-        npm install -g cordova@12
+      run: npm install -g cordova@12
     
-    - name: Create Cordova project
+    - name: Initialize Cordova project
       run: |
         cordova create kulguru-app com.kulguru.tracker Kulguru
+    
+    - name: Copy files to Cordova www
+      run: |
+        rm -rf kulguru-app/www/*
+        cp index.html kulguru-app/www/
+        cp config.xml kulguru-app/
+    
+    - name: Add Android platform
+      run: |
         cd kulguru-app
-        cp ../index.html www/
-        cp ../config.xml .
-        cordova platform add android
+        cordova platform add android@12
     
     - name: Build APK
       run: |
         cd kulguru-app
-        cordova build android --release -- --packageType=apk
+        cordova build android --release -- --gradleArg=--no-daemon
     
-    - name: Upload APK
+    - name: Upload APK Artifact
       uses: actions/upload-artifact@v4
       with:
-        name: kulguru-app
-        path: kulguru-app/platforms/android/app/build/outputs/apk/release/app-release-unsigned.apk
+        name: kulguru-apk
+        path: kulguru-app/platforms/android/app/build/outputs/apk/release/*.apk
+        if-no-files-found: error
+    
+    - name: Get APK filename
+      id: apk_file
+      run: |
+        cd kulguru-app/platforms/android/app/build/outputs/apk/release/
+        echo "apk_path=$(ls *.apk | head -1)" >> $GITHUB_OUTPUT
     
     - name: Create Release
       id: create_release
-      uses: actions/create-release@v1
-      env:
-        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      uses: softprops/action-gh-release@v1
       with:
         tag_name: v1.0.${{ github.run_number }}
-        release_name: Kulguru v1.0.${{ github.run_number }}
-        draft: false
-        prerelease: false
-    
-    - name: Upload Release APK
-      uses: actions/upload-release-asset@v1
+        name: Kulguru v1.0.${{ github.run_number }}
+        files: kulguru-app/platforms/android/app/build/outputs/apk/release/*.apk
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-      with:
-        upload_url: ${{ steps.create_release.outputs.upload_url }}
-        asset_path: kulguru-app/platforms/android/app/build/outputs/apk/release/app-release-unsigned.apk
-        asset_name: kulguru-v1.0.${{ github.run_number }}.apk
-        asset_content_type: application/vnd.android.package-archive
