@@ -30,6 +30,13 @@ jobs:
     - name: Accept Android SDK licenses
       run: yes | sdkmanager --licenses || true
     
+    - name: Install specific Gradle version
+      run: |
+        wget https://services.gradle.org/distributions/gradle-8.5-bin.zip
+        sudo unzip -d /opt/gradle gradle-8.5-bin.zip
+        sudo ln -sf /opt/gradle/gradle-8.5/bin/gradle /usr/bin/gradle
+        gradle --version
+    
     - name: Install Cordova
       run: npm install -g cordova@12
     
@@ -49,6 +56,12 @@ jobs:
       env:
         ANDROID_HOME: /usr/local/lib/android/sdk
         ANDROID_SDK_ROOT: /usr/local/lib/android/sdk
+        PATH: /opt/gradle/gradle-8.5/bin:$PATH
+    
+    - name: Force Gradle 8.5 in project
+      run: |
+        cd kulguru-app/platforms/android
+        echo "distributionUrl=https\://services.gradle.org/distributions/gradle-8.5-bin.zip" > gradle/wrapper/gradle-wrapper.properties
     
     - name: Build APK
       run: |
@@ -57,17 +70,13 @@ jobs:
       env:
         ANDROID_HOME: /usr/local/lib/android/sdk
         ANDROID_SDK_ROOT: /usr/local/lib/android/sdk
-    
-    - name: List APK files
-      run: |
-        echo "Looking for APK files..."
-        find kulguru-app/platforms/android/app/build/outputs/apk -name "*.apk"
+        PATH: /opt/gradle/gradle-8.5/bin:$PATH
     
     - name: Upload APK Artifact
       uses: actions/upload-artifact@v4
       with:
         name: kulguru-apk
-        path: kulguru-app/platforms/android/app/build/outputs/apk/debug/*.apk
+        path: kulguru-app/platforms/android/app/build/outputs/apk/debug/app-debug.apk
         if-no-files-found: error
     
     - name: Create Release
@@ -75,6 +84,6 @@ jobs:
       with:
         tag_name: v1.0.${{ github.run_number }}
         name: Kulguru v1.0.${{ github.run_number }}
-        files: kulguru-app/platforms/android/app/build/outputs/apk/debug/*.apk
+        files: kulguru-app/platforms/android/app/build/outputs/apk/debug/app-debug.apk
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
