@@ -22,7 +22,7 @@ jobs:
       uses: actions/setup-java@v4
       with:
         distribution: 'temurin'
-        java-version: '17'
+        java-version: '11'
     
     - name: Setup Android SDK
       uses: android-actions/setup-android@v3
@@ -31,7 +31,7 @@ jobs:
       run: yes | sdkmanager --licenses || true
     
     - name: Install Cordova
-      run: npm install -g cordova@12
+      run: npm install -g cordova@11
     
     - name: Initialize Cordova project
       run: cordova create kulguru-app com.kulguru.tracker Kulguru
@@ -39,14 +39,13 @@ jobs:
     - name: Copy files to Cordova www
       run: |
         rm -rf kulguru-app/www/*
-        cp Index.html kulguru-app/www/
-        cp Config.xml kulguru-app/
+        cp index.html kulguru-app/www/
+        cp config.xml kulguru-app/
     
-    - name: Add Android platform with Gradle 8.5
+    - name: Add Android platform
       run: |
         cd kulguru-app
-        export CORDOVA_ANDROID_GRADLE_DISTRIBUTION_URL=https://services.gradle.org/distributions/gradle-8.5-all.zip
-        cordova platform add android@12 --no-telemetry
+        cordova platform add android@10.1.2 --no-telemetry
       env:
         ANDROID_HOME: /usr/local/lib/android/sdk
         ANDROID_SDK_ROOT: /usr/local/lib/android/sdk
@@ -54,7 +53,7 @@ jobs:
     - name: Build APK
       run: |
         cd kulguru-app
-        cordova build android --debug --no-telemetry -- --gradleArg=-PcdvBuildMultipleApks=false
+        cordova build android --debug --no-telemetry
       env:
         ANDROID_HOME: /usr/local/lib/android/sdk
         ANDROID_SDK_ROOT: /usr/local/lib/android/sdk
