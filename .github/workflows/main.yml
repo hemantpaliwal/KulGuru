@@ -46,20 +46,28 @@ jobs:
         cd kulguru-app
         cordova platform add android@11
 
-    - name: Install Android SDK build tools
+    - name: Setup Android SDK properly
       run: |
+        echo "Setting up Android SDK..."
         sudo apt-get update -qq
         sudo apt-get install -y wget unzip
-        mkdir -p $ANDROID_HOME/cmdline-tools-temp
+        mkdir -p /usr/local/lib/android/sdk/cmdline-tools
         wget https://dl.google.com/android/repository/commandlinetools-linux-9477386_latest.zip -O cmdline-tools.zip
-        unzip -q cmdline-tools.zip -d $ANDROID_HOME/cmdline-tools-temp
-        yes | $ANDROID_HOME/cmdline-tools-temp/cmdline-tools/bin/sdkmanager --licenses
-        yes | $ANDROID_HOME/cmdline-tools-temp/cmdline-tools/bin/sdkmanager "platforms;android-32" "build-tools;32.0.0" "platform-tools"
+        unzip -q cmdline-tools.zip -d /usr/local/lib/android/sdk/cmdline-tools
+        mv /usr/local/lib/android/sdk/cmdline-tools/cmdline-tools /usr/local/lib/android/sdk/cmdline-tools/latest
+        yes | /usr/local/lib/android/sdk/cmdline-tools/latest/bin/sdkmanager --licenses
+        yes | /usr/local/lib/android/sdk/cmdline-tools/latest/bin/sdkmanager "platforms;android-32" "build-tools;32.0.0" "platform-tools"
+      env:
+        ANDROID_HOME: /usr/local/lib/android/sdk
+        PATH: /usr/local/lib/android/sdk/cmdline-tools/latest/bin:/usr/local/lib/android/sdk/platform-tools:$PATH
 
     - name: Build APK (Debug)
       run: |
         cd kulguru-app
         cordova build android --debug
+      env:
+        ANDROID_HOME: /usr/local/lib/android/sdk
+        PATH: /usr/local/lib/android/sdk/cmdline-tools/latest/bin:/usr/local/lib/android/sdk/platform-tools:$PATH
 
     - name: List APK output (for debugging)
       run: ls -R kulguru-app/platforms/android/app/build/outputs/apk
