@@ -30,13 +30,6 @@ jobs:
     - name: Accept Android SDK licenses
       run: yes | sdkmanager --licenses || true
     
-    - name: Install specific Gradle version
-      run: |
-        wget https://services.gradle.org/distributions/gradle-8.5-bin.zip
-        sudo unzip -d /opt/gradle gradle-8.5-bin.zip
-        sudo ln -sf /opt/gradle/gradle-8.5/bin/gradle /usr/bin/gradle
-        gradle --version
-    
     - name: Install Cordova
       run: npm install -g cordova@12
     
@@ -49,28 +42,22 @@ jobs:
         cp Index.html kulguru-app/www/
         cp Config.xml kulguru-app/
     
-    - name: Add Android platform
+    - name: Add Android platform with Gradle 8.5
       run: |
         cd kulguru-app
+        export CORDOVA_ANDROID_GRADLE_DISTRIBUTION_URL=https://services.gradle.org/distributions/gradle-8.5-all.zip
         cordova platform add android@12 --no-telemetry
       env:
         ANDROID_HOME: /usr/local/lib/android/sdk
         ANDROID_SDK_ROOT: /usr/local/lib/android/sdk
-        PATH: /opt/gradle/gradle-8.5/bin:$PATH
-    
-    - name: Force Gradle 8.5 in project
-      run: |
-        cd kulguru-app/platforms/android
-        echo "distributionUrl=https\://services.gradle.org/distributions/gradle-8.5-bin.zip" > gradle/wrapper/gradle-wrapper.properties
     
     - name: Build APK
       run: |
         cd kulguru-app
-        cordova build android --debug --no-telemetry
+        cordova build android --debug --no-telemetry -- --gradleArg=-PcdvBuildMultipleApks=false
       env:
         ANDROID_HOME: /usr/local/lib/android/sdk
         ANDROID_SDK_ROOT: /usr/local/lib/android/sdk
-        PATH: /opt/gradle/gradle-8.5/bin:$PATH
     
     - name: Upload APK Artifact
       uses: actions/upload-artifact@v4
