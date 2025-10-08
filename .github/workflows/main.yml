@@ -8,77 +8,73 @@ on:
 jobs:
   build:
     runs-on: ubuntu-latest
-
+    
     steps:
     - name: Checkout code
       uses: actions/checkout@v4
-
+    
     - name: Setup Node.js
       uses: actions/setup-node@v4
       with:
         node-version: '18'
-
+    
     - name: Setup Java
       uses: actions/setup-java@v4
       with:
         distribution: 'temurin'
         java-version: '17'
-
-    - name: Setup Gradle
-      uses: gradle/actions/setup-gradle@v3
-      with:
-        gradle-version: '8.5'
-
+    
+    - name: Setup Android SDK
+      uses: android-actions/setup-android@v3
+    
+    - name: Accept Android SDK licenses
+      run: yes | sdkmanager --licenses || true
+    
     - name: Install Cordova
       run: npm install -g cordova@12
-
+    
     - name: Initialize Cordova project
       run: cordova create kulguru-app com.kulguru.tracker Kulguru
-
+    
     - name: Copy files to Cordova www
       run: |
         rm -rf kulguru-app/www/*
         cp Index.html kulguru-app/www/
         cp Config.xml kulguru-app/
-
+    
     - name: Add Android platform
       run: |
         cd kulguru-app
-        cordova platform add android@11
-
-    - name: Use Preinstalled Android SDK
-      run: |
-        echo "Using preinstalled Android SDK from GitHub runner..."
-        yes | sdkmanager --licenses
-        yes | sdkmanager "platforms;android-33" "build-tools;33.0.2" "platform-tools"
+        cordova platform add android@12 --no-telemetry
       env:
         ANDROID_HOME: /usr/local/lib/android/sdk
-        PATH: /usr/local/lib/android/sdk/cmdline-tools/latest/bin:/usr/local/lib/android/sdk/platform-tools:$PATH
-
-    - name: Build APK (Debug)
+        ANDROID_SDK_ROOT: /usr/local/lib/android/sdk
+    
+    - name: Build APK
       run: |
         cd kulguru-app
-        cordova build android --debug
+        cordova build android --debug --no-telemetry
       env:
         ANDROID_HOME: /usr/local/lib/android/sdk
-        PATH: /usr/local/lib/android/sdk/cmdline-tools/latest/bin:/usr/local/lib/android/sdk/platform-tools:$PATH
-
-    - name: List APK output (for debugging)
-      run: ls -R kulguru-app/platforms/android/app/build/outputs/apk
-
+        ANDROID_SDK_ROOT: /usr/local/lib/android/sdk
+    
+    - name: List APK files
+      run: |
+        echo "Looking for APK files..."
+        find kulguru-app/platforms/android/app/build/outputs/apk -name "*.apk"
+    
     - name: Upload APK Artifact
       uses: actions/upload-artifact@v4
       with:
         name: kulguru-apk
-        path: kulguru-app/platforms/android/app/build/outputs/apk/debug/app-debug.apk
+        path: kulguru-app/platforms/android/app/build/outputs/apk/debug/*.apk
         if-no-files-found: error
-
+    
     - name: Create Release
-      id: create_release
       uses: softprops/action-gh-release@v1
       with:
         tag_name: v1.0.${{ github.run_number }}
         name: Kulguru v1.0.${{ github.run_number }}
-        files: kulguru-app/platforms/android/app/build/outputs/apk/debug/app-debug.apk
+        files: kulguru-app/platforms/android/app/build/outputs/apk/debug/*.apk
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
